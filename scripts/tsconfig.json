@@ -1,0 +1,6 @@
+{
+    "compilerOptions": {
+        "baseUrl": "scripts",
+        "strict": true
+    }
+}
