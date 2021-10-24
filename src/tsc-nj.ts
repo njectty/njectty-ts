@@ -1,33 +1,31 @@
 import { transform } from "@babel/core";
 import { not } from "logical-not";
-import {
-    createCompilerHost,
-    createProgram,
-    ModuleResolutionKind,
-} from "typescript";
+import { createCompilerHost, createProgram, sys as system } from "typescript";
 
-import { getCompilerOptions } from "./tools/get-compiler-options";
+import { Environment } from "./tools/environment";
+import { isTs, isDTs } from "./tools/reg-exp";
 
+const environment = Environment.create();
 const babelOptions = {
     plugins: ["babel-plugin-njectty/typescript"],
 };
 
-const { compilerOptions, files } = getCompilerOptions();
+if (not(environment.compilerOptions.watch)) {
+    const { compilerOptions, files } = environment;
 
-compilerOptions.moduleResolution = ModuleResolutionKind.NodeJs;
-
-if (not(compilerOptions.watch)) {
     const host = createCompilerHost(compilerOptions);
 
-    host.readFile = function (filename: string): string | undefined {
-        const file = files.resolve(filename);
+    host.readFile = function (path: string): string | undefined {
+        if (isTs.test(path) && not(isDTs.test(path))) {
+            const file = system.readFile(path)!;
 
-        if (not(file)) return;
+            return transform(file, babelOptions)!.code!;
+        }
 
-        return transform(file, babelOptions)!.code!;
+        return system.readFile(path);
     };
 
-    const program = createProgram(files.get(), compilerOptions, host);
+    const program = createProgram(files, compilerOptions, host);
 
     program.emit();
 }
