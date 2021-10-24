@@ -1,31 +1,43 @@
 import { transform } from "@babel/core";
 import { not } from "logical-not";
-import { createCompilerHost, createProgram, sys as system } from "typescript";
+import {
+    CompilerHost,
+    createCompilerHost,
+    createProgram,
+    createWatchCompilerHost,
+    createWatchProgram,
+    sys as system,
+    WatchCompilerHostOfFilesAndCompilerOptions,
+} from "typescript";
 
 import { Environment } from "./tools/environment";
 import { isTs, isDTs } from "./tools/reg-exp";
 
-const environment = Environment.create();
 const babelOptions = {
     plugins: ["babel-plugin-njectty/typescript"],
 };
 
-if (not(environment.compilerOptions.watch)) {
-    const { compilerOptions, files } = environment;
+const { compilerOptions, files } = Environment.create();
+const { watch } = compilerOptions;
 
-    const host = createCompilerHost(compilerOptions);
+const host = not(watch)
+    ? createCompilerHost(compilerOptions)
+    : createWatchCompilerHost(files, compilerOptions, system);
 
-    host.readFile = function (path: string): string | undefined {
-        if (isTs.test(path) && not(isDTs.test(path))) {
-            const file = system.readFile(path)!;
+host.readFile = function (path: string): string | undefined {
+    if (isTs.test(path) && not(isDTs.test(path))) {
+        const file = system.readFile(path)!;
 
-            return transform(file, babelOptions)!.code!;
-        }
+        return transform(file, babelOptions)!.code!;
+    }
 
-        return system.readFile(path);
-    };
+    return system.readFile(path);
+};
 
-    const program = createProgram(files, compilerOptions, host);
+if (not(watch)) {
+    const program = createProgram(files, compilerOptions, host as CompilerHost);
 
     program.emit();
+} else {
+    createWatchProgram(host as WatchCompilerHostOfFilesAndCompilerOptions<any>);
 }

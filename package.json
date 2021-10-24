@@ -1,6 +1,6 @@
 {
     "name": "njectty-ts",
-    "version": "0.7.1",
+    "version": "0.7.3",
     "description": "",
     "author": {
         "name": "Pavel Dymkov",
@@ -16,8 +16,7 @@
     "dependencies": {
         "@babel/core": "^7.15.8",
         "babel-plugin-njectty": "^0.7.1",
-        "logical-not": "^1.0.9",
-        "minimatch": "^3.0.4"
+        "logical-not": "^1.0.9"
     },
     "devDependencies": {
         "@types/babel__core": "^7.1.16",
